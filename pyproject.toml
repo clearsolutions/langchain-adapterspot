@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "langchain-adapterspot"
+version = "0.1.0"
+description = "LangChain tools for the AdapterSpot Power Supply Identifier API: read a power adapter label from a photo and find the power supply that fits."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Clear Solutions BV (AdapterSpot)", email = "info@adapterspot.com" }]
+keywords = ["langchain", "tool", "power supply", "power adapter", "ocr", "vision", "adapterspot"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+]
+dependencies = ["langchain-core>=0.3.0", "httpx>=0.27"]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "pytest-asyncio>=0.23", "langchain-tests>=0.3"]
+
+[project.urls]
+Homepage = "https://adapterspot.com/en/api/"
+Documentation = "https://adapterspot.com/en/api/langchain/"
+Source = "https://github.com/clearsolutions/langchain-adapterspot"
+
+[tool.hatch.build.targets.wheel]
+packages = ["langchain_adapterspot"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
