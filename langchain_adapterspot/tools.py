@@ -1,4 +1,4 @@
-"""LangChain tools for the AdapterSpot Power Supply Identifier API.
+"""LangChain tools for the Power Adapter Label Reader API (AdapterSpot).
 
 Docs: https://adapterspot.com/en/api/langchain/
 """
@@ -97,7 +97,7 @@ class LabelReaderInput(BaseModel):
         description="Photo of the power adapter label or the device's rating plate: a local file path, an http(s) URL or a data URL."
     )
     lang: Literal["en", "nl", "fr"] = Field(
-        default="en", description="Language of the note and product links."
+        default="en", description="Language of the note."
     )
 
 
@@ -105,7 +105,7 @@ class AdapterSpotLabelReader(_AdapterSpotBase):
     """Read a power adapter label from a photo with the AdapterSpot API.
 
     Returns JSON with the output voltage, current, wattage, connector and polarity,
-    and the power supply that fits from the AdapterSpot catalog.
+    and the requirements a replacement power supply must meet.
 
     Setup:
         .. code-block:: bash
@@ -130,7 +130,7 @@ class AdapterSpotLabelReader(_AdapterSpotBase):
     description: str = (
         "Read the rating label of a power adapter (or the power input on a device's type plate) "
         "from a photo. Input: a local image path or URL. Returns JSON with output voltage, current, "
-        "wattage, connector type and polarity, plus the power supply that fits."
+        "wattage, connector type and polarity, plus the requirements for a replacement power supply."
     )
     args_schema: Type[BaseModel] = LabelReaderInput
 
@@ -158,17 +158,17 @@ class PowerSupplyFinderInput(BaseModel):
     current: Optional[float] = Field(default=None, description="Output current in amps, e.g. 5")
     power: Optional[float] = Field(default=None, description="Output power in watts, e.g. 60")
     connector: Optional[str] = Field(
-        default=None, description="Connector id (b21, b25, b35, din4) or text such as '5.5x2.1'"
+        default=None, description="Connector id (b21, b25, b35, din4, usbc) or text such as '5.5x2.1'"
     )
     polarity: Optional[Literal["center_positive", "center_negative"]] = Field(default=None)
-    lang: Literal["en", "nl", "fr"] = Field(default="en")
 
 
 class AdapterSpotPowerSupplyFinder(_AdapterSpotBase):
-    """Find the power supply that fits given ratings, with the AdapterSpot API.
+    """Get the requirements for a replacement power supply from known ratings.
 
-    Give at least two of voltage, current and power. Does not count toward the
-    free monthly quota.
+    Give at least two of voltage, current and power. Returns the exact voltage,
+    minimum current and power, plug, polarity and plain-English rules. Does not
+    count toward the free monthly quota.
 
     Invoke:
         .. code-block:: python
@@ -180,8 +180,9 @@ class AdapterSpotPowerSupplyFinder(_AdapterSpotBase):
 
     name: str = "adapterspot_power_supply_finder"
     description: str = (
-        "Find the power supply that fits a device, given at least two of output voltage (V), "
-        "current (A) and power (W), optionally the connector and polarity. Returns JSON with matching power supplies."
+        "Work out which power supply a device needs, given at least two of output voltage (V), "
+        "current (A) and power (W), optionally the connector and polarity. Returns JSON with the "
+        "required voltage, minimum current and power, plug, polarity and plain-English rules."
     )
     args_schema: Type[BaseModel] = PowerSupplyFinderInput
 
@@ -196,12 +197,11 @@ class AdapterSpotPowerSupplyFinder(_AdapterSpotBase):
         power: Optional[float] = None,
         connector: Optional[str] = None,
         polarity: Optional[str] = None,
-        lang: str = "en",
         run_manager: Any = None,
     ) -> str:
-        params = self._params(voltage=voltage, current=current, power=power, connector=connector, polarity=polarity, lang=lang)
+        params = self._params(voltage=voltage, current=current, power=power, connector=connector, polarity=polarity)
         with httpx.Client(timeout=self.timeout) as client:
-            resp = client.get(f"{self.base_url}/v1/power-supply", headers=self._headers(), params=params)
+            resp = client.get(f"{self.base_url}/v1/requirements", headers=self._headers(), params=params)
         return self._result(resp)
 
     async def _arun(
@@ -211,10 +211,9 @@ class AdapterSpotPowerSupplyFinder(_AdapterSpotBase):
         power: Optional[float] = None,
         connector: Optional[str] = None,
         polarity: Optional[str] = None,
-        lang: str = "en",
         run_manager: Any = None,
     ) -> str:
-        params = self._params(voltage=voltage, current=current, power=power, connector=connector, polarity=polarity, lang=lang)
+        params = self._params(voltage=voltage, current=current, power=power, connector=connector, polarity=polarity)
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            resp = await client.get(f"{self.base_url}/v1/power-supply", headers=self._headers(), params=params)
+            resp = await client.get(f"{self.base_url}/v1/requirements", headers=self._headers(), params=params)
         return self._result(resp)

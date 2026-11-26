@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "langchain-adapterspot"
-version = "0.1.0"
-description = "LangChain tools for the AdapterSpot Power Supply Identifier API: read a power adapter label from a photo and find the power supply that fits."
+version = "0.2.0"
+description = "LangChain tools for the Power Adapter Label Reader API: read a power adapter label from a photo and get the requirements for a replacement power supply."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

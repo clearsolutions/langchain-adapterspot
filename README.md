@@ -1,11 +1,9 @@
 # langchain-adapterspot
 
-LangChain tools for the [AdapterSpot Power Supply Identifier API](https://adapterspot.com/en/api/).
+LangChain tools for the [Power Adapter Label Reader API](https://adapterspot.com/en/api/) by AdapterSpot.
 
-- **`AdapterSpotLabelReader`**: send a photo of a power adapter label (or the rating plate on a device) and get the output voltage, current, wattage, connector type and polarity back as JSON, plus the power supply that fits.
-- **`AdapterSpotPowerSupplyFinder`**: give the ratings (at least two of volts, amps and watts, optionally connector and polarity) and get the matching power supplies.
-
-The label reader combines an AI vision model with the AdapterSpot connector library and catalog of verified power supplies for network and NAS equipment.
+- **`AdapterSpotLabelReader`**: send a photo of a power adapter label (or the rating plate on a device) and get the output voltage, current, wattage, connector type and polarity back as JSON, plus the requirements a replacement power supply must meet.
+- **`AdapterSpotPowerSupplyFinder`**: give the ratings (at least two of volts, amps and watts, optionally connector and polarity) and get the same requirements: exact voltage, minimum current and power, plug, polarity and plain-English rules.
 
 Full guide: <https://adapterspot.com/en/api/langchain/>
 
@@ -17,7 +15,7 @@ pip install langchain-adapterspot
 
 ## API key
 
-Get a free key at <https://adapterspot.com/en/api/> (10 label reads per month; power-supply lookups are free), then:
+Get a free key at <https://adapterspot.com/en/api/> (10 label reads per month; requirement lookups are free), then:
 
 ```bash
 export ADAPTERSPOT_API_KEY="as_live_..."
@@ -63,7 +61,16 @@ print(result["messages"][-1].content)
   "confidence": "high",
   "output": {"voltage_v": 12, "current_a": 5, "power_w": 60, "computed_field": null, "polarity": "center_positive"},
   "connector": {"id": null, "name": null, "printed": null, "seen_in_photo": "not_visible"},
-  "match": {"exact": false, "power_supplies": [{"name": "Synology DS211j power supply (12V DC, 60W)", "voltage_v": 12, "current_a": 5, "url": "https://adapterspot.com/en/synology-ds211j-power-supply/", "ships_to": ["BE", "NL"]}]},
+  "requirements": {
+    "voltage_v": 12, "min_current_a": 5, "min_power_w": 60,
+    "connector": null, "polarity": "center_positive", "complete": false,
+    "rules": [
+      "Use exactly 12 V DC. A different voltage can damage the device.",
+      "Current rating at least 5 A (60 W). A higher rating is safe: the device only draws what it needs.",
+      "Plug size unknown: measure the plug or the socket on the device (common sizes: 5.5 × 2.1 mm, 5.5 × 2.5 mm, 3.5 × 1.35 mm).",
+      "Polarity: center positive (+ on the inner pin)."
+    ]
+  },
   "usage": {"month": "2026-11", "label_reads_used": 1, "label_reads_quota": 10, "label_reads_left": 9}
 }
 ```

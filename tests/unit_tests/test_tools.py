@@ -23,8 +23,8 @@ def api(monkeypatch):
             return httpx.Response(401, json={"error": "unauthorized", "message": "bad key"})
         if request.url.path == "/v1/label":
             return httpx.Response(200, json={"readable": True, "output": {"voltage_v": 12}})
-        if request.url.path == "/v1/power-supply":
-            return httpx.Response(200, json={"match": {"exact": True, "power_supplies": []}})
+        if request.url.path == "/v1/requirements":
+            return httpx.Response(200, json={"requirements": {"voltage_v": 12, "complete": False}})
         return httpx.Response(404, json={"error": "not_found"})
 
     transport = httpx.MockTransport(handler)
@@ -54,9 +54,10 @@ async def test_label_reader_async(api, tmp_path):
 
 
 def test_finder_drops_empty_params(api):
-    AdapterSpotPowerSupplyFinder(api_key=KEY).invoke({"voltage": 12, "current": 5})
-    params = dict(api[0].url.params)
-    assert params == {"voltage": "12.0", "current": "5.0", "lang": "en"}
+    out = json.loads(AdapterSpotPowerSupplyFinder(api_key=KEY).invoke({"voltage": 12, "current": 5}))
+    assert out["requirements"]["voltage_v"] == 12
+    assert api[0].url.path == "/v1/requirements"
+    assert dict(api[0].url.params) == {"voltage": "12.0", "current": "5.0"}
 
 
 def test_api_error_becomes_tool_message(api):
